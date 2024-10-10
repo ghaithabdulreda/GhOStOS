@@ -7,3 +7,5 @@ nasm -f elf 32/kernel_entry.asm -o kernel_entry.o
 /usr/local/i386elfgcc/bin/i386-elf-gcc -ffreestanding -m32 -mtune=intel -g -c 32/kernel.cpp -o kernel.o 
 /usr/local/i386elfgcc/bin/i386-elf-ld -o full_kernel.bin -Ttext 0x1000 kernel_entry.o kernel.o --ignore-unresolved-symbol _GLOBAL_OFFSET_TABLE_ --oformat binary
 cat main.bin full_kernel.bin > main.flp
+
+qemu-system-x86_64 -fda main.flp
