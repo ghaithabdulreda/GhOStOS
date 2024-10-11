@@ -5,16 +5,16 @@
 #define PIC1_PORT (0x20)       
 
 
-int position = 0;  // متغير لحفظ الموضع الحالي للكتابة في شاشة الفيديو
+int position = 0; // CURSOR POS
 
 void printf(const char* str1);
-void clear();  // دالة لمسح الشاشة
-void scanf(char* input);  // دالة لقراءة الإدخال من لوحة المفاتيح
-
+void print(const char* str1, ...);
+void clear();
+void scanf(char* input);
+void set_cursor_position(unsigned char row, unsigned char col);
 static inline unsigned char inb(unsigned short port);
-static inline void outb(unsigned short port, int data);
+static inline void outb(unsigned short port, unsigned char data);
 
-inline void strcmp();
 
 const char* scancodeInputData(char scancode) {
     switch(scancode) {
@@ -129,11 +129,11 @@ const char* scancodeInputData(char scancode) {
         case 0x36: 
             return "SHIFT";
         case 0x37: 
-            return "*"; // Numeric keypad
+            return "*";
         case 0x38: 
             return "ALT"; // Alternate key
         case 0x39: 
-            return "SPACE";
+            return " ";
         case 0x3A: 
             return "CAPSLOCK";
         case 0x3B: 
@@ -161,31 +161,31 @@ const char* scancodeInputData(char scancode) {
         case 0x46: 
             return "SCROLLLOCK";
         case 0x47: 
-            return "7"; // Numeric keypad
+            return "7";
         case 0x48: 
-            return "8"; // Numeric keypad
+            return "8";
         case 0x49: 
-            return "9"; // Numeric keypad
+            return "9";
         case 0x4A: 
-            return "-"; // Numeric keypad
+            return "-";
         case 0x4B: 
-            return "4"; // Numeric keypad
+            return "4";
         case 0x4C: 
-            return "5"; // Numeric keypad
+            return "5";
         case 0x4D: 
-            return "6"; // Numeric keypad
+            return "6";
         case 0x4E: 
-            return "+"; // Numeric keypad
+            return "+";
         case 0x4F: 
-            return "1"; // Numeric keypad
+            return "1";
         case 0x50: 
-            return "2"; // Numeric keypad
+            return "2";
         case 0x51: 
-            return "3"; // Numeric keypad
+            return "3";
         case 0x52: 
-            return "0"; // Numeric keypad
+            return "0";
         case 0x53: 
-            return "."; // Numeric keypad
+            return ".";
         
    
 
@@ -195,83 +195,123 @@ const char* scancodeInputData(char scancode) {
 }
 
 
-// دالة لطباعة نص على الشاشة
+void print(const char* str1, ...){}
 void printf(const char* str1) {
     volatile char* video_memory = (volatile char*) VIDEO_BUF_PTR;
-    unsigned char color = 7;  // اللون الافتراضي للنص (رمادي على أسود)
+    unsigned char color = 7; 
+    if (strcmp(str1, "BACKSPACE") ==0) // WHEN BACKSPACE
+    {
+        position-=2;
+        set_cursor_position(position / 2 / 80, position / 2 % 80);
+        video_memory[position] = ' ';    
+        video_memory[position + 1] = color;    
+
+        return;
+    }
 
     for (int i = 0; str1[i] != '\0'; i++) {
         if (str1[i] == '\n') {
-            int line_size = 80;  // الانتقال إلى السطر التالي
-            position = (position / (line_size * 2) + 1) * (line_size * 2);  // الانتقال للسطر الجديد
+            int line_size = 80;  
+            position = (position / (line_size * 2) + 1) * (line_size * 2); 
+            set_cursor_position(position / 2 / 80, position / 2 % 80); 
         } else {
-            video_memory[position] = str1[i];      // الحرف
-            video_memory[position + 1] = color;   // اللون
-            position += 2;  // الانتقال إلى الموقع التالي
+            video_memory[position] = str1[i];     
+            video_memory[position + 1] = color;     
+            position += 2;
+            set_cursor_position(position / 2 / 80, position / 2 % 80);
         }
         
-        // التأكد من عدم تجاوز نهاية الشاشة
+      
         if (position >= VIDEO_WIDTH * VIDEO_HEIGHT * 2) {
-            clear();  // مسح الشاشة إذا امتلأت
+            clear(); 
             position = 0;
         }
     }
 }
 
-// دالة لمسح الشاشة
+
+
 void clear() {
     volatile char* video_memory = (volatile char*) VIDEO_BUF_PTR;
-    unsigned char color = 7;  // اللون الافتراضي للنص
+    unsigned char color = 7; 
 
     for (int i = 0; i < 80 * 25 * 2; i += 2) {
-        video_memory[i] = ' ';      // تعيين الحرف كمسافة
-        video_memory[i + 1] = color;   // تعيين اللون
+        video_memory[i] = ' ';   
+        video_memory[i + 1] = color;  
     }
 
-    position = 0;  // إعادة تعيين المؤشر إلى البداية
+    position = 0;
 }
 
 
 void scanf(char* input, int max_size) {
-    int p = 0; // مؤشر لحفظ موضع الإدخال
+    int p = 0;
     unsigned char scan_code;
 
     while (1) {
-        // تحقق مما إذا كان هناك بيانات جديدة في PS/2
         if (inb(0x64) & 0x01) {
             scan_code = inb(0x60);
             if (scan_code < 128) {
             	const char* char_input = scancodeInputData(scan_code);
             	if (char_input == "ENTER")
             		break;
-            	else
-            		printf(char_input);
-            	input[p] = char_input[0];
-            	p++;
+            	else if(char_input == "BACKSPACE"){
+                    if (p != 0)
+                    {
+                        p--;
+                        printf("BACKSPACE");
+                    }
+                    
+                    
+
+                }
+                else{
+                    printf(char_input);
+                    input[p] = char_input[0];
+                    p++;
+                }
             }
         }
 
-        // الخروج إذا كانت المصفوفة ممتلئة
+        
         if (p >= max_size - 1) {
-            break; // المصفوفة ممتلئة، الخروج من الحلقة
+            break;
         }
     }
     
-    input[p] = '\0'; // إضافة علامة نهاية السلسلة
-}
-
-inline void strcmp(){
-
+    input[p] = '\0'; 
 }
 
 
-// تعريف دوال inb و outb
+void set_cursor_position(unsigned char row, unsigned char col) {
+    unsigned short position = (row * 80) + col;
+    // Change the cursor position
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, position & 0xFF);
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (position >> 8) & 0xFF);
+}
+void enable_cursor() {
+    outb(0x3D4, 0x0A); 
+    outb(0x3D5, 0x20); 
+}
+
+void disable_cursor() {
+    outb(0x3D4, 0x0A); 
+    outb(0x3D5, 0x20); 
+}
+
+
 static inline unsigned char inb(unsigned short port) {
     unsigned char ret;
     __asm__ __volatile__("inb %1, %0" : "=a"(ret) : "Nd"(port));
     return ret;
 }
 
-static inline void outb(unsigned short port, int data) {
+static inline void outb(unsigned short port, unsigned char data) {
     __asm__ __volatile__("outb %0, %1" : : "a"(data), "Nd"(port));
 }
+
+
+
+

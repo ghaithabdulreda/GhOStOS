@@ -1,50 +1,65 @@
+#include "cpp/stdint.cpp"
+#include "cpp/string.cpp"
 #include "cpp/io/stdio.cpp"
-#define COMMAND_COUNT 6
+#include "cpp/main.cpp"
+int x = 42;
 
-void check_execute(char* str);
-
-const char* commands[COMMAND_COUNT] = {
-    "LS",
-    "pwd",
-    "whoami",
-    "s",
-    "A",
-    "a",
-};
-
-// دالة مقارنة السلاسل
-int my_strcmp(const char* str1, const char* str2) {
-    int i = 0;
-
-    while (str1[i] != '\0' && str2[i] != '\0') {
-        if (str1[i] != str2[i]) {
-            return str1[i] - str2[i];
-        }
-        i++;
-    }
-
-    return str1[i] - str2[i];
+void r(){
+    // root@GhOSt:
+        printf("\n");
+        printf(users[userselect].user);
+        printf("@");
+        printf(users[userselect].name);
+        printf(":# ");
 }
 
-// الدالة الرئيسية
+
 extern "C" void main() {
-    clear();
+    
 
-    const char* str1 = "Kernel Start...\n";
+
+
+
+    clear();
+    const char* str1 = "Kernel Start...\nPlease Wait...\n";
     printf(str1);
+    
 
-    const char* str2 = "Please Wait...\n";
-    printf(str2);
+    
+    
 
-    clear();
+    
+    prem();
+
+    
+
 
     char input[50];
-    while (1) {
-        printf("\nEnter your text: ");
-        scanf(input, sizeof(input));  // تأكد من استخدام الحجم الصحيح
-        if (my_strcmp(input, input) == 0) { // يجب تعديل شرط المقارنة هنا
-            printf(input);
+    
+    // set_cursor_position(10, 20); // Set cursor position
+    
+    while (True) {
+        r();
+
+        
+        
+        scanf(input, sizeof(input));
+        bool isFound = false;
+        for (int i = 0; i < COMMAND_COUNT; i++) {
+            if (strcmp(input, commands[i].command) == 0) {
+                isFound = true;
+   
+                check_execute(input);
+                break;
+            }
         }
+        if (!isFound)
+        {
+            printf("\nCommand Not Found");
+        }
+        
+
+    
     }
 
     return;

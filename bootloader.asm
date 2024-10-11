@@ -1,6 +1,6 @@
 ; Bootloader code
 bits 16                 ; tell NASM this is 16 bit code
-org 0x7c00              ; tell NASM to start outputting stuff at offset 0x7c00
+org 0x7c00              ; offset 0x7c00
 
 KERNEL_LOCATION equ 0x1000
 
@@ -20,19 +20,20 @@ boot:
     ; Jump to read sector
     jmp readSector
 
-; Function to delay for 5 seconds
+
 delay_5_seconds:
     ; Get the current time
-    mov ah, 0x00      ; Function to get current time
-    int 0x1A          ; Call the interrupt
-    mov bx, dx        ; Store current seconds in bx
-    add bx, 5         ; Add 5 seconds to bx for the delay
+    mov ah, 0x00      ; get current time
+    int 0x1A        
+    mov bx, dx        
+
+    add bx, 5         ; add 5 seconds to bx for the delay
 
 wait_loop:
-    mov ah, 0x00      ; Function to get current time
-    int 0x1A          ; Call the interrupt
-    cmp dx, bx        ; Compare current seconds with the target value
-    jb wait_loop      ; If current seconds < target, continue waiting
+    mov ah, 0x00      
+    int 0x1A          
+    cmp dx, bx        
+    jb wait_loop      
     ret
 
 halt:
